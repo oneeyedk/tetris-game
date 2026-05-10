@@ -1,0 +1,317 @@
+/* Design Ref: §5.1 — layout spec, §9.1 Presentation layer */
+
+:root {
+  --bg:           #1a1a2e;
+  --surface:      #16213e;
+  --accent:       #0f3460;
+  --text:         #e0e0e0;
+  --text-dim:     #6677aa;
+  --btn-bg:       #0f3460;
+  --btn-hover:    #1a4a80;
+  --btn-active:   #0a2040;
+  --modal-bg:     rgba(0, 0, 0, 0.82);
+  --rotate-press: #0e5c3a;
+  --gap:          10px;
+  --radius:       8px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Courier New', Courier, monospace;
+  display: flex;
+  justify-content: center;
+  min-height: 100svh;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 580px;
+  padding: var(--gap);
+  gap: var(--gap);
+}
+
+/* ── Header ─────────────────────────────────────── */
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+h1 {
+  font-size: clamp(1.2rem, 5vw, 1.8rem);
+  letter-spacing: 0.35em;
+  color: #00ffff;
+  text-shadow: 0 0 12px #00ffffaa;
+}
+
+#score-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+#score-display {
+  font-size: clamp(1.1rem, 5vw, 1.5rem);
+  font-weight: bold;
+  color: #ffff00;
+  letter-spacing: 0.08em;
+}
+
+/* ── Main area ───────────────────────────────────── */
+
+main {
+  display: flex;
+  gap: var(--gap);
+  align-items: flex-start;
+  flex: 1;
+}
+
+/* ── Board ───────────────────────────────────────── */
+
+#board-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+#game-canvas {
+  display: block;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+}
+
+/* overlays sit on top of canvas */
+#pause-overlay,
+#gameover-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: rgba(0, 0, 0, 0.78);
+  border-radius: var(--radius);
+  font-weight: bold;
+  letter-spacing: 0.1em;
+}
+
+#pause-overlay {
+  font-size: clamp(1.2rem, 5vw, 1.8rem);
+  color: #aaeeff;
+}
+
+#gameover-overlay p:first-child {
+  font-size: clamp(1.3rem, 5vw, 2rem);
+  color: #ff4444;
+  text-shadow: 0 0 10px #ff4444;
+}
+
+#final-score {
+  font-size: clamp(1rem, 4vw, 1.4rem);
+  color: #ffff00;
+}
+
+.hidden { display: none !important; }
+
+/* ── Side panel ──────────────────────────────────── */
+
+#side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  flex: 1;
+  min-width: 0;
+}
+
+.preview-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.label {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+#next-canvas,
+#next-next-canvas {
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--surface);
+  display: block;
+}
+
+#stats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.stat span:last-child {
+  font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+
+#save-controls {
+  display: flex;
+  gap: 6px;
+  flex-direction: column;
+}
+
+/* ── Buttons (shared) ────────────────────────────── */
+
+button {
+  background: var(--btn-bg);
+  color: var(--text);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  transition: background 0.1s;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+}
+
+button:hover  { background: var(--btn-hover); }
+button:active { background: var(--btn-active); }
+
+#btn-restart {
+  font-size: 0.88rem;
+  padding: 10px 22px;
+}
+
+/* ── Control bar ─────────────────────────────────── */
+
+#controls {
+  display: flex;
+  justify-content: space-around;
+  gap: var(--gap);
+  padding: 6px 0 4px;
+  flex-shrink: 0;
+}
+
+#controls button {
+  flex: 1;
+  min-height: 60px;
+  font-size: clamp(1.4rem, 6vw, 1.8rem);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 2px;
+}
+
+/* visual feedback: green tint while long-pressing rotate */
+#btn-rotate.pressing {
+  background: var(--rotate-press);
+  border-color: #00cc66;
+}
+
+/* ── Modals ──────────────────────────────────────── */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: var(--modal-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 16px;
+}
+
+.modal-content {
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 22px;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal-content h2 {
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  color: #00ffff;
+  text-transform: uppercase;
+}
+
+.modal-content textarea {
+  width: 100%;
+  min-height: 90px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 8px;
+  font-family: monospace;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  resize: vertical;
+  word-break: break-all;
+  user-select: text;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.error {
+  color: #ff6666;
+  font-size: 0.82rem;
+}
+
+/* ── Desktop adjustments ─────────────────────────── */
+
+@media (min-width: 768px) {
+  body { align-items: center; }
+
+  #app { padding: 20px 24px; }
+
+  #controls button {
+    min-height: 68px;
+    font-size: 2rem;
+  }
+
+  #save-controls { flex-direction: row; }
+}
+
+/* ── Landscape mobile (limited height) ───────────── */
+
+@media (orientation: landscape) and (max-height: 500px) {
+  header { padding: 2px 0; }
+
+  #controls button { min-height: 48px; }
+}
