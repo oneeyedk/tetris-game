@@ -71,6 +71,21 @@ h1 {
   letter-spacing: 0.08em;
 }
 
+/* Plan SC: FR-07 — 음소거 버튼 (헤더 내 소형) */
+#btn-mute {
+  background: transparent;
+  border: none;
+  font-size: clamp(1.1rem, 4vw, 1.4rem);
+  padding: 4px 6px;
+  cursor: pointer;
+  line-height: 1;
+  border-radius: 6px;
+  transition: background 0.1s;
+}
+
+#btn-mute:hover  { background: rgba(255,255,255,0.08); }
+#btn-mute:active { background: rgba(255,255,255,0.15); }
+
 /* ── Main area ───────────────────────────────────── */
 
 main {

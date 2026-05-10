@@ -8,6 +8,7 @@ import { calcScore, calcLevel, getSpeed }                    from './scoring.js'
 import { encode, decode }                                    from './save.js';
 import { initInput }                                         from './input.js';
 import { Renderer }                                          from './renderer.js';
+import { AudioManager }                                      from './audio.js';
 
 // Plan SC: FR-02 — 7-bag randomizer
 function newBag() {
@@ -44,8 +45,13 @@ class Game {
   constructor() {
     this.state    = createInitialState();
     this.renderer = new Renderer();
+    this.audio    = new AudioManager();
     this.lastTime = 0;
     this.dropAccum = 0;
+
+    // Plan SC: FR-02 — 첫 인터랙션에서 AudioContext unlock (Autoplay 정책 대응)
+    document.addEventListener('pointerdown', () => this.audio.unlock(), { once: true });
+    document.addEventListener('keydown',     () => this.audio.unlock(), { once: true });
 
     this._bindUI();
     initInput({
@@ -140,6 +146,11 @@ class Game {
     const placed             = placePiece(board, current, colorId);
     const { newBoard, cleared } = clearLines(placed);
 
+    // Plan SC: FR-05 — 잠금 충격음 (하드드롭·중력 공통)
+    this.audio.playHardDrop();
+    // Plan SC: FR-04 — 줄 소거 효과음
+    if (cleared > 0) this.audio.playLineClear(cleared);
+
     const newLines  = this.state.lines + cleared;
     const newLevel  = calcLevel(newLines);
     const newScore  = this.state.score + calcScore(cleared, newLevel);
@@ -165,6 +176,9 @@ class Game {
       document.getElementById('gameover-overlay')?.classList.remove('hidden');
       document.getElementById('final-score').textContent =
         `SCORE: ${String(newScore).padStart(6, '0')}`;
+      // Plan SC: FR-06, FR-09 — 게임오버: BGM 정지 + 하강 효과음
+      this.audio.stopBgm();
+      this.audio.playGameOver();
       return;
     }
 
@@ -189,8 +203,12 @@ class Game {
     this.state.isPaused = !this.state.isPaused;
     document.getElementById('pause-overlay')
       ?.classList.toggle('hidden', !this.state.isPaused);
-    if (!this.state.isPaused) {
-      // Reset timer so we don't drop instantly after long pause
+    if (this.state.isPaused) {
+      // Plan SC: FR-03 — 일시정지 시 BGM 일시정지
+      this.audio.suspendBgm();
+    } else {
+      // Plan SC: FR-03 — 재개 시 BGM 재개
+      this.audio.resumeBgm();
       this.lastTime  = performance.now();
       this.dropAccum = 0;
     }
@@ -209,7 +227,21 @@ class Game {
       this.state     = createInitialState();
       this.dropAccum = 0;
       this.lastTime  = performance.now();
+      // Plan SC: FR-09 — 재시작 시 BGM 재개
+      this.audio.stopBgm();
+      this.audio.unlock();
     });
+
+    // Plan SC: FR-07 — 음소거 버튼
+    const btnMute = document.getElementById('btn-mute');
+    if (btnMute) {
+      btnMute.textContent = this.audio.isMuted ? '🔇' : '🔊';
+      btnMute.addEventListener('click', () => {
+        const next = !this.audio.isMuted;
+        this.audio.setMuted(next);
+        btnMute.textContent = next ? '🔇' : '🔊';
+      });
+    }
 
     // ── Save modal ──────────────────────────────────────────────────────────
 
