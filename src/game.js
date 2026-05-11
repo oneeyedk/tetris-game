@@ -155,6 +155,9 @@ class Game {
     const newLevel  = calcLevel(newLines);
     const newScore  = this.state.score + calcScore(cleared, newLevel);
 
+    // BGM BPM tracks game speed — update even if level unchanged (harmless)
+    this.audio.setLevel(newLevel);
+
     // Advance piece queue — refill bag when exhausted
     let bag = [...this.state.bag];
     if (bag.length === 0) bag = newBag();
@@ -227,8 +230,9 @@ class Game {
       this.state     = createInitialState();
       this.dropAccum = 0;
       this.lastTime  = performance.now();
-      // Plan SC: FR-09 — 재시작 시 BGM 재개
+      // Plan SC: FR-09 — 재시작 시 BGM 재개 (레벨 1 BPM으로 초기화)
       this.audio.stopBgm();
+      this.audio.setLevel(1);
       this.audio.unlock();
     });
 
